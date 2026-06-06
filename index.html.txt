@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stars Casino | Ігри на Telegram Stars</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a1f29;
+            --card-bg: #242c3d;
+            --accent-color: #00c853;
+            --text-main: #ffffff;
+            --text-muted: #7e8b9b;
+            --gold: #ffb300;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: 80 darkened;
+            overflow-x: hidden;
+        }
+
+        /* Шапка профілю */
+        .header {
+            background: linear-gradient(135deg, #242c3d 0%, #1e2535 100%);
+            padding: 20px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .user-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(45deg, #ffb300, #ff6f00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 0 10px rgba(255, 179, 0, 0.4);
+        }
+
+        .username {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .user-id {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .balance-badge {
+            background: rgba(255, 179, 0, 0.15);
+            border: 1px solid rgba(255, 179, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        /* Контент / Сітка ігор */
+        .container {
+            padding: 0 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 25px;
+        }
+
+        .game-card {
+            background-color: var(--card-bg);
+            border-radius: 18px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .game-card:active {
+            transform: scale(0.96);
+        }
+
+        .game-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .game-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .game-rtp {
+            font-size: 11px;
+            color: var(--accent-color);
+            background: rgba(0, 200, 83, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        /* Панель швидких дій */
+        .action-banner {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-text h4 {
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .action-text p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .action-btn {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Фіксоване меню знизу */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background-color: var(--card-bg);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-decoration: none;
+            gap: 4px;
+        }
+
+        .nav-item.active {
+            color: var(--gold);
+        }
+
+        .nav-item span {
+            font-size: 20px;
+        }
+
+        /* Спливаюче вікно для ставок (Модалка) */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            width: 100px;
+            outline: none;
+        }
+
+        .bet-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+        }
+
+        .close-btn {
+            margin-top: 12px;
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="user-box">
+            <div class="user-info">
+                <div class="avatar" id="user-avatar">🎰</div>
+                <div>
+                    <div class="username" id="user-name">Гість</div>
+                    <div class="user-id" id="user-id">ID: 00000000</div>
+                </div>
+            </div>
+            <div class="balance-badge">
+                <span>⭐</span> <span id="user-balance">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="action-banner">
+            <div class="action-text">
+                <h4>🎁 Безкоштовні Зірки!</h4>
+                <p>Забирай бонус у боті кожні 24 години.</p>
+            </div>
+            <button class="action-btn" onclick="triggerAction('deposit')">Поповнити</button>
+        </div>
+
+        <div class="section-title">🎮 Доступні ігри</div>
+        <div class="games-grid">
+            <div class="game-card" onclick="openGame('Краш', '🚀')">
+                <span class="game-icon">🚀</span>
+                <div class="game-name">Краш (Ракета)</div>
+                <div class="game-rtp">RTP: 98.4%</div>
+            </div>
+            <div class="game-card" onclick="openGame('Мінер', '💣')">
+                <span class="game-icon">💣</span>
+                <div class="game-name">Мінер</div>
+                <div class="game-rtp">RTP: 97.2%</div>
+            </div>
+            <div class="game-card" onclick="openGame('Плінко', '🔮')">
+                <span class="game-icon">🔮</span>
+                <div class="game-name">Плінко</div>
+                <div class="game-rtp">RTP: 98.9%</div>
+            </div>
+            <div class="game-card" onclick="openGame('Слоти 777', '🎰')">
+                <span class="game-icon">🎰</span>
+                <div class="game-name">Слоти</div>
+                <div class="game-rtp">RTP: 96.5%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <a href="#" class="nav-item active">
+            <span>🎮</span>Ігри
+        </a>
+        <a href="#" class="nav-item" onclick="triggerAction('autowithdraw')">
+            <span>💸</span>Вивід
+        </a>
+    </div>
+
+    <div class="modal" id="game-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-game-title">Гра</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Введіть суму ставки в Stars:</div>
+            <div class="bet-input-box">
+                <input type="number" id="bet-amount" value="10" min="1">
+            </div>
+            <button class="bet-btn" onclick="playRound()">Зробити ставку & Грати</button>
+            <div class="close-btn" onclick="closeModal()">Скасувати</div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Розгортаємо вікно на максимум
+
+        // Отримуємо дані гравця з Telegram
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('user-name').innerText = user.username ? '@' + user.username : user.first_name;
+            document.getElementById('user-id').innerText = 'ID: ' + user.id;
+            if (user.first_name) {
+                document.getElementById('user-avatar').innerText = user.first_name.charAt(0).toUpperCase();
+            }
+        }
+
+        let currentGame = "";
+
+        function openGame(gameName, icon) {
+            currentGame = gameName;
+            document.getElementById('modal-game-title').innerText = icon + " " + gameName;
+            document.getElementById('game-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('game-modal').classList.remove('active');
+        }
+
+        // Логіка швидкої симуляції гри прямо в Web App для відправки результату бекенду
+        function playRound() {
+            const betInput = document.getElementById('bet-amount');
+            const betValue = parseInt(betInput.value);
+
+            if (isNaN(betValue) || betValue <= 0) {
+                alert("Будь ласка, введіть правильну суму ставки!");
+                return;
+            }
+
+            closeModal();
+
+            // Випадковий результат (виграв чи програв)
+            const isWin = Math.random() > 0.52; // Шанс виграшу близький до реального казино
+            let change = 0;
+            let textResult = "";
+
+            if (isWin) {
+                const multiplier = (1.2 + Math.random() * 2).toFixed(2);
+                const winAmount = Math.round(betValue * multiplier);
+                change = winAmount - betValue;
+                textResult = `🎉 **Виграш!** Множник: **x${multiplier}**\n➕ Зараховано: **+${winAmount} зірок**`;
+            } else {
+                change = -betValue;
+                textResult = `📉 **Програш!** Удача посміхнеться наступного разу.\n➖ Списано: **-${betValue} зірок**`;
+            }
+
+            // Пакет даних для нашого Python бота
+            const gameData = {
+                game: currentGame,
+                bet: betValue,
+                change: change,
+                text: textResult
+            };
+
+            // Надсилаємо дані назад у бот і закриваємо Web App сторінку
+            tg.sendData(JSON.stringify(gameData));
+            tg.close();
+        }
+
+        function triggerAction(actionName) {
+            tg.sendData(JSON.stringify({ action: actionName }));
+            tg.close();
+        }
+    </script>
+</body>
+</html>

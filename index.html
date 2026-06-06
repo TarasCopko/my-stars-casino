@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Stars Casino | Оновлена Версія</title>
+    <title>Stars Casino | Фінальна Версія</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -29,11 +28,21 @@
         .page { display: none; padding: 15px; }
         .page.active { display: block; }
 
-        /* Сітка ігор */
-        .games-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-        .game-card { background: var(--card-bg); border-radius: 14px; padding: 20px; text-align: center; border: 1px solid #222b3c; cursor: pointer; transition: transform 0.1s; }
-        .game-card:active { transform: scale(0.95); }
-        .game-card span { font-size: 40px; display: block; margin-bottom: 8px; }
+        /* Сітка ігор з іконками */
+        .games-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
+        .game-card { 
+            background: linear-gradient(135deg, #1c2430, var(--card-bg)); 
+            border-radius: 16px; 
+            padding: 25px 15px; 
+            text-align: center; 
+            border: 1px solid #253147; 
+            cursor: pointer; 
+            transition: transform 0.1s, border-color 0.2s; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .game-card:active { transform: scale(0.95); border-color: var(--gold); }
+        .game-card .game-icon { font-size: 45px; display: block; margin-bottom: 10px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5)); }
+        .game-card .game-name { font-size: 16px; font-weight: bold; color: var(--text-main); }
 
         /* Меню Покупки Stars */
         .shop-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: var(--gold); text-align: center; }
@@ -51,16 +60,18 @@
         .game-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 1000; display: none; flex-direction: column; }
         .game-overlay.active { display: flex; }
         .game-header { display: flex; justify-content: space-between; padding: 15px; background: var(--card-bg); align-items: center; border-bottom: 1px solid #222b3c; }
-        .game-screen { background: #070a0f; border-radius: 14px; height: 230px; margin-bottom: 15px; position: relative; overflow: hidden; border: 1px solid #1c2430; }
-        canvas { width: 100%; height: 100%; display: block; }
-        .multiplier-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 36px; font-weight: bold; color: white; z-index: 10; pointer-events: none; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+        
+        .game-screen { background: #070a0f; border-radius: 14px; height: 240px; margin-bottom: 15px; position: relative; overflow: hidden; border: 1px solid #1c2430; }
+        canvas { width: 100% !important; height: 100% !important; display: block; }
+        .multiplier-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 38px; font-weight: bold; color: white; z-index: 10; pointer-events: none; text-shadow: 0 0 10px rgba(0,0,0,0.9); }
 
-        /* Управління ставками */
+        /* Керування ставками */
         .bet-control { background: var(--card-bg); padding: 15px; border-radius: 14px; border: 1px solid #222b3c; }
         .input-group { display: flex; gap: 10px; margin-bottom: 12px; }
         .input-group div { flex: 1; }
         label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
         input { width: 100%; background: #0b0e14; border: 1px solid #222b3c; padding: 12px; color: white; border-radius: 8px; font-size: 16px; font-weight: bold; outline: none; }
+        
         .btn-action { width: 100%; background: var(--blue); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.1s; }
         .btn-action:active { transform: scale(0.98); }
         .btn-action.win { background: var(--accent-green) !important; }
@@ -72,7 +83,7 @@
         .mine-cell.gem { background: rgba(0, 230, 118, 0.2); border: 1px solid var(--accent-green); }
         .mine-cell.bomb { background: rgba(255, 61, 0, 0.2); border: 1px solid var(--accent-red); }
 
-        /* Стрічка "Зараз грають" */
+        /* Стрічка активності */
         .live-feed { margin-top: 15px; background: var(--card-bg); border-radius: 12px; padding: 12px; border: 1px solid #222b3c; }
         .feed-item { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-bottom: 1px solid #1c2430; }
         .feed-win { color: var(--accent-green); font-weight: bold; }
@@ -88,18 +99,36 @@
 
     <div id="games-page" class="page active">
         <div class="games-grid">
-            <div class="game-card" onclick="openGame('rocket')"><span>🚀</span>Ракета</div>
-            <div class="game-card" onclick="openGame('crash')"><span>📈</span>Краш</div>
-            <div class="game-card" onclick="openGame('mines')"><span>💣</span>Міни</div>
-            <div class="game-card" onclick="openGame('slots')"><span>🎰</span>Слоти</div>
-            <div class="game-card" onclick="openGame('plinko')"><span>🔮</span>Плінко</div>
-            <div class="game-card" onclick="openGame('coin')"><span>🪙</span>Орел / Решка</div>
+            <div class="game-card" onclick="openGame('rocket')">
+                <span class="game-icon">🚀</span>
+                <span class="game-name">Ракета</span>
+            </div>
+            <div class="game-card" onclick="openGame('crash')">
+                <span class="game-icon">📈</span>
+                <span class="game-name">Краш</span>
+            </div>
+            <div class="game-card" onclick="openGame('mines')">
+                <span class="game-icon">💣</span>
+                <span class="game-name">Міни</span>
+            </div>
+            <div class="game-card" onclick="openGame('slots')">
+                <span class="game-icon">🎰</span>
+                <span class="game-name">Слоти</span>
+            </div>
+            <div class="game-card" onclick="openGame('plinko')">
+                <span class="game-icon">🔮</span>
+                <span class="game-name">Плінко</span>
+            </div>
+            <div class="game-card" onclick="openGame('coin')">
+                <span class="game-icon">🪙</span>
+                <span class="game-name">Орел / Решка</span>
+            </div>
         </div>
 
         <div class="live-feed">
             <h4 style="font-size: 14px; margin-bottom: 8px; color: var(--gold); display: flex; align-items: center; gap: 6px;">
                 <span style="width: 8px; height: 8px; background: var(--accent-green); border-radius: 50%; display: inline-block;"></span> 
-                Зараз грають в Ракету:
+                Зараз у грі:
             </h4>
             <div id="rocket-live-users">
                 <div class="feed-item"><span>@Ivan_Solo</span><span>Ставка: 50 ⭐</span><span class="feed-win">В грі...</span></div>
@@ -112,30 +141,12 @@
     <div id="shop-page" class="page">
         <div class="shop-title">💳 Поповнення балансу Stars</div>
         <div class="shop-grid">
-            <div class="shop-card" onclick="buyStars(15)">
-                <div class="stars-count">⭐ 15</div>
-                <div class="price-tag">18 грн</div>
-            </div>
-            <div class="shop-card" onclick="buyStars(25)">
-                <div class="stars-count">⭐ 25</div>
-                <div class="price-tag">28 грн</div>
-            </div>
-            <div class="shop-card" onclick="buyStars(50)">
-                <div class="stars-count">⭐ 50</div>
-                <div class="price-tag">48 грн</div>
-            </div>
-            <div class="shop-card" onclick="buyStars(100)">
-                <div class="stars-count">⭐ 100</div>
-                <div class="price-tag">79 грн</div>
-            </div>
-            <div class="shop-card" onclick="buyStars(250)">
-                <div class="stars-count">⭐ 250</div>
-                <div class="price-tag">190 грн</div>
-            </div>
-            <div class="shop-card" onclick="buyStars(500)">
-                <div class="stars-count">⭐ 500</div>
-                <div class="price-tag">370 грн</div>
-            </div>
+            <div class="shop-card" onclick="buyStars(15)"><div class="stars-count">⭐ 15</div><div class="price-tag">18 грн</div></div>
+            <div class="shop-card" onclick="buyStars(25)"><div class="stars-count">⭐ 25</div><div class="price-tag">28 грн</div></div>
+            <div class="shop-card" onclick="buyStars(50)"><div class="stars-count">⭐ 50</div><div class="price-tag">48 грн</div></div>
+            <div class="shop-card" onclick="buyStars(100)"><div class="stars-count">⭐ 100</div><div class="price-tag">79 грн</div></div>
+            <div class="shop-card" onclick="buyStars(250)"><div class="stars-count">⭐ 250</div><div class="price-tag">190 грн</div></div>
+            <div class="shop-card" onclick="buyStars(500)"><div class="stars-count">⭐ 500</div><div class="price-tag">370 грн</div></div>
         </div>
     </div>
 
@@ -145,8 +156,8 @@
             <p id="prof-id" style="color: var(--text-muted); font-size:12px; margin-top:4px;">ID: 00000000</p>
         </div>
         <div class="profile-card">
-            <div class="profile-stat"><span>💰 Мій Баланс:</span><span id="stat-balance" style="color: var(--gold); font-weight:bold;">0 ⭐</span></div>
-            <div class="profile-stat"><span>🎮 Зіграно ігор:</span><span id="stat-games">0</span></div>
+            <div class="profile-stat"><span>💰 Баланс:</span><span id="stat-balance" style="color: var(--gold); font-weight:bold;">0 ⭐</span></div>
+            <div class="profile-stat"><span>🎮 Ігор зіграно:</span><span id="stat-games">0</span></div>
             <div class="profile-stat"><span>📊 Оборот ставок:</span><span id="stat-turnover" style="color: var(--blue);">0 ⭐</span></div>
         </div>
     </div>
@@ -230,9 +241,12 @@
             document.getElementById('mines-board').style.display = (game==='mines') ? 'grid' : 'none';
             document.getElementById('mult-text').style.display = (game==='rocket' || game==='crash') ? 'block' : 'none';
 
-            resizeCanvas();
-            initEmptyCanvas();
-            if(game === 'mines') buildMinesBoard();
+            // ВИПРАВЛЕНО: Затримка дає блоку display:flex набути розмірів, щоб Canvas не ставав 0x0
+            setTimeout(() => {
+                resizeCanvas();
+                initEmptyCanvas();
+                if(game === 'mines') buildMinesBoard();
+            }, 50);
         }
 
         function closeGame() {
@@ -241,31 +255,27 @@
         }
 
         function resizeCanvas() {
-            canvas.width = document.getElementById('screen-box').clientWidth;
-            canvas.height = document.getElementById('screen-box').clientHeight;
+            const box = document.getElementById('screen-box');
+            canvas.width = box.clientWidth;
+            canvas.height = box.clientHeight;
         }
 
         function initEmptyCanvas() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             ctx.fillStyle = "#6c7a8c";
-            ctx.font = "16px sans-serif";
+            ctx.font = "14px sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText("Натисніть СТАРТ для запуску анімації", canvas.width/2, canvas.height/2);
+            ctx.fillText("Натисніть СТАВКА для запуску", canvas.width/2, canvas.height/2);
         }
 
         function generateCrashPoint() {
-            if (Math.random() <= 0.01) { // Шанс 1 на 100 (1%) на максимальний ікс
-                return (150 + Math.random() * 100).toFixed(2);
-            }
-            return (1.05 + Math.random() * 3.5).toFixed(2);
+            if (Math.random() <= 0.01) return (150 + Math.random() * 100).toFixed(2);
+            return (1.05 + Math.random() * 4.5).toFixed(2);
         }
 
         function startCurrentGame() {
             let bet = parseInt(document.getElementById('bet-amount').value);
-            if(bet > playerData.balance || bet <= 0) {
-                alert("Недостатньо Stars або невірна ставка!");
-                return;
-            }
+            if(bet <= 0) return;
 
             playerData.balance -= bet;
             playerData.turnover += bet;
@@ -302,11 +312,11 @@
             }));
         }
 
-        /* --- 🚀 АНІМАЦІЯ РАКЕТИ ТА ЗЕЛЕНОГО ШЛЕЙФУ --- */
+        /* --- РАКЕТА --- */
         function runRocket(bet) {
             let targetX = generateCrashPoint();
             let currentX = 1.00;
-            let speed = 0.008;
+            let speed = 0.01;
             let rX = 20, rY = canvas.height - 30;
             let points = [];
             let autoCash = parseFloat(document.getElementById('auto-cash').value);
@@ -315,20 +325,17 @@
             function draw() {
                 ctx.clearRect(0,0,canvas.width,canvas.height);
                 document.getElementById('mult-text').innerText = "x" + currentX.toFixed(2);
-
                 points.push({x: rX, y: rY});
 
-                // Малюємо зелений шлейф із неоновим світінням
                 ctx.beginPath();
                 ctx.strokeStyle = "#00e676";
-                ctx.lineWidth = 5;
+                ctx.lineWidth = 4;
                 for(let i=0; i<points.length; i++) {
                     if(i===0) ctx.moveTo(points[i].x, points[i].y);
                     else ctx.lineTo(points[i].x, points[i].y);
                 }
                 ctx.stroke();
 
-                // Малюємо Ракету
                 ctx.font = "30px sans-serif";
                 ctx.fillText("🚀", rX, rY + 10);
 
@@ -348,15 +355,14 @@
                 }
 
                 currentX += speed;
-                rX += (canvas.width - 50) / 300;
-                rY -= (canvas.height - 50) / 300;
-
+                rX += (canvas.width - 50) / 200;
+                rY -= (canvas.height - 50) / 200;
                 animId = requestAnimationFrame(draw);
             }
             draw();
         }
 
-        /* --- 📈 АНІМАЦІЯ КРАШУ (ЧЕРВОНА ЛІНІЯ) --- */
+        /* --- КРАШ --- */
         function runCrash(bet) {
             let targetX = generateCrashPoint();
             let currentX = 1.00;
@@ -370,7 +376,7 @@
 
                 ctx.beginPath();
                 ctx.strokeStyle = "#ff3d00";
-                ctx.lineWidth = 5;
+                ctx.lineWidth = 4;
                 ctx.moveTo(0, canvas.height);
                 ctx.lineTo(cX, cY);
                 ctx.stroke();
@@ -390,64 +396,18 @@
                     return;
                 }
 
-                currentX += 0.01;
-                cX += canvas.width / 250;
-                cY -= canvas.height / 250;
-
+                currentX += 0.015;
+                cX += canvas.width / 180;
+                cY -= canvas.height / 180;
                 animId = requestAnimationFrame(draw);
             }
             draw();
         }
 
-        /* --- 💣 ЛОГІКА МІН --- */
-        let minePositions = [];
-        let openedCells = 0;
-        function buildMinesBoard() {
-            const board = document.getElementById('mines-board');
-            board.innerHTML = "";
-            for(let i=0; i<25; i++) {
-                let cell = document.createElement('div');
-                cell.className = "mine-cell";
-                cell.dataset.id = i;
-                cell.onclick = () => clickMineCell(cell);
-                board.appendChild(cell);
-            }
-        }
-
-        function runMinesLogic() {
-            let count = parseInt(document.getElementById('mines-count').value);
-            minePositions = []; openedCells = 0;
-            while(minePositions.length < count) {
-                let r = Math.floor(Math.random() * 25);
-                if(!minePositions.includes(r)) minePositions.push(r);
-            }
-            buildMinesBoard();
-            document.getElementById('main-play-btn').innerText = "МЕДАЛЬ ЗАКЛАДЕНО";
-        }
-
-        function clickMineCell(cell) {
-            let id = parseInt(cell.dataset.id);
-            if(cell.classList.contains('gem') || cell.classList.contains('bomb')) return;
-
-            if(minePositions.includes(id)) {
-                cell.classList.add('bomb'); cell.innerText = "💣";
-                finishGame(0, "💣 **Ви підірвалися на міні!** Гра закінчена.");
-            } else {
-                cell.classList.add('gem'); cell.innerText = "💎";
-                openedCells++;
-                let bet = parseInt(document.getElementById('bet-amount').value);
-                if(openedCells === (25 - minePositions.length) || Math.random() > 0.7) {
-                    let win = Math.round(bet * (1.2 + openedCells * 0.3));
-                    finishGame(win, `💎 **Чудова гра! Ви відкрили кристали.**\n💰 Виграш: **+${win}** Stars`);
-                }
-            }
-        }
-
-        /* --- 🎰 ПЛАВНА АНІМАЦІЯ СЛОТІВ --- */
+        /* --- СЛОТИ --- */
         function runSlots(bet) {
             let icons = ["🍒", "🍋", "💎", "7️⃣", "⭐"];
             let timer = 0;
-
             function spin() {
                 ctx.clearRect(0,0,canvas.width,canvas.height);
                 ctx.font = "45px sans-serif";
@@ -461,47 +421,40 @@
                 ctx.fillText(r2, canvas.width/2, canvas.height/2 + 15);
                 ctx.fillText(r3, canvas.width/1.33, canvas.height/2 + 15);
 
-                timer += 40;
-                if(timer < 1200) {
+                timer += 50;
+                if(timer < 1000) {
                     animId = requestAnimationFrame(spin);
                 } else {
                     cancelAnimationFrame(animId);
-                    if(r1 === r2 && r2 === r3) {
-                        finishGame(bet * 5, `🎰 **ДЖЕКПОТ!** Повний збіг: [${r1}${r2}${r3}]`);
-                    } else if(r1 === r2 || r2 === r3) {
-                        finishGame(Math.round(bet * 1.5), `🎰 **Перемога!** Подвійна комбінація: [${r1}${r2}${r3}]`);
-                    } else {
-                        finishGame(0, `🎰 Випало: [${r1}${r2}${r3}]. Спробуйте ще раз!`);
-                    }
+                    if(r1 === r2 && r2 === r3) finishGame(bet * 5, `🎰 **ДЖЕКПОТ!** Повний збіг: [${r1}${r2}${r3}]`);
+                    else if(r1 === r2 || r2 === r3 || r1 === r3) finishGame(Math.round(bet * 1.5), `🎰 **Перемога!** Збіг комбінації: [${r1}${r2}${r3}]`);
+                    else finishGame(0, `🎰 Випало: [${r1}${r2}${r3}]. Спробуйте ще!`);
                 }
             }
             spin();
         }
 
-        /* --- 🔮 АНІМАЦІЯ КУЛЬКИ ПЛІНКО --- */
+        /* --- ПЛІНКО --- */
         function runPlinko(bet) {
             let bx = canvas.width / 2, by = 20;
             function drop() {
                 ctx.clearRect(0,0,canvas.width,canvas.height);
-                
-                // Малюємо точки (піни)
                 ctx.fillStyle = "#ffffff";
                 for(let r=1; r<6; r++) {
                     for(let i=0; i<=r; i++) {
                         ctx.beginPath(); ctx.arc((canvas.width/2) - (r*15) + (i*30), r*35, 3, 0, Math.PI*2); ctx.fill();
                     }
                 }
-                // Рух кульки
                 ctx.fillStyle = "#ffc400";
                 ctx.beginPath(); ctx.arc(bx, by, 8, 0, Math.PI*2); ctx.fill();
 
-                by += 5; bx += (Math.random() - 0.5) * 5;
+                by += 6; bx += (Math.random() - 0.5) * 6;
 
-                if(by < canvas.height - 25) {
+                if(by < canvas.height - 20) {
                     animId = requestAnimationFrame(drop);
                 } else {
                     cancelAnimationFrame(animId);
-                    let mults = [0.5, 1.5, 3.0, 0.2, 2.0];
+                    let mults = [0.4, 1.2, 2.5, 0.5, 3.0];
                     let m = mults[Math.floor(Math.random()*mults.length)];
                     finishGame(Math.round(bet * m), `🔮 Кулька Плінко впала в сектор x${m}!`);
                 }
@@ -509,43 +462,21 @@
             drop();
         }
 
-        /* --- 🪙 ОБЕРТАННЯ МОНЕТИ (ОРЕЛ/РЕШКА) --- */
+        /* --- ОРЕЛ / РЕШКА --- */
         function runCoin(bet) {
             let angle = 0;
-            let side = Math.random() > 0.5 ? "ОРАЛ" : "РЕШКА";
-
+            let side = Math.random() > 0.5 ? "ОРЕЛ" : "РЕШКА";
             function flip() {
                 ctx.clearRect(0,0,canvas.width,canvas.height);
                 ctx.save();
                 ctx.translate(canvas.width/2, canvas.height/2);
                 ctx.scale(Math.abs(Math.sin(angle)), 1);
 
-                ctx.beginPath(); ctx.arc(0, 0, 45, 0, Math.PI*2);
+                ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI*2);
                 ctx.fillStyle = "#ffc400"; ctx.fill();
-                ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
-
-                ctx.fillStyle = "#000000"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
-                ctx.fillText("💰", 0, 5);
+                ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2; ctx.stroke();
                 ctx.restore();
 
-                angle += 0.3;
-                if(angle < 10) {
+                angle += 0.4;
+                if(angle < 12) {
                     animId = requestAnimationFrame(flip);
-                } else {
-                    cancelAnimationFrame(animId);
-                    ctx.clearRect(0,0,canvas.width,canvas.height);
-                    ctx.fillStyle = "#ffffff"; ctx.font = "bold 24px sans-serif";
-                    ctx.fillText("🪙 " + side, canvas.width/2 - 40, canvas.height/2 + 10);
-
-                    if(Math.random() > 0.45) {
-                        finishGame(bet * 2, `🪙 **Виграш!** Випав **${side}**.`);
-                    } else {
-                        finishGame(0, `🪙 **Програш!** Випав **${side}**, але удача була на боці казино.`);
-                    }
-                }
-            }
-            flip();
-        }
-    </script>
-</body>
-</html>
